@@ -1,71 +1,81 @@
 # tmdb.py
-# This file handles all communication with the TMDB API.
-# It contains functions that send requests and return clean, usable data.
+#
+# Handles all communication with the TMDB (The Movie Database) API.
+#
+# Every request to TMDB goes through this file. The rest of the app
+# (app.py, main.py) never builds TMDB URLs or handles API keys directly:
+# it just calls these functions and gets back plain Python data.
+#
+# The API key comes from config.py, which is listed in .gitignore
+# so it is never pushed to GitHub.
 
 import requests
 from config import API_KEY
 
-# The base URL for every TMDB API request
+# Every TMDB endpoint starts with this address
 BASE_URL = "https://api.themoviedb.org/3"
 
 
 def search_movie(title):
     """
-    Searches for movies by title using the TMDB search endpoint.
+    Searches TMDB for movies matching a title.
+
+    Used by the /search route in app.py (modal search) and by main.py.
 
     Parameters:
-        title (str): The movie name the user typed in
+        title (str): The text the user typed, e.g. "amadeus"
 
     Returns:
-        list: A list of movie dictionaries with results,
-              or an empty list if nothing was found or an error occurred
+        list: Movie dictionaries in TMDB's raw format, best matches first.
+              Each one has keys like "id", "title", "release_date",
+              "vote_average" and "poster_path".
+              Returns an empty list if the request fails, so callers
+              can always loop over the result without checking for errors.
     """
 
-    # Build the full URL for the search endpoint
-    # TMDB's search/movie endpoint lets us search by title (called "query")
     url = f"{BASE_URL}/search/movie"
 
-    # Parameters we send along with the request:
-    # - api_key: authenticates us with TMDB
-    # - query: the search term (the movie title the user typed)
-    # - language: ensures results come back in English
+    # requests turns this dictionary into the query string:
+    # ?api_key=...&query=amadeus&language=en-US
+    # It also escapes spaces and accents in the title for us.
     params = {
         "api_key": API_KEY,
         "query": title,
         "language": "en-US"
     }
 
-    # Send the GET request to the TMDB API
     response = requests.get(url, params=params)
 
-    # Check if the request was successful (status 200 = OK)
+    # 200 means success. Anything else (401 = bad API key,
+    # 429 = too many requests, 5xx = TMDB is down) is treated as a failure.
     if response.status_code == 200:
-        # .json() converts the raw response text into a Python dictionary
         data = response.json()
 
-        # The actual list of movies is inside the "results" key
-        # Example: data = { "results": [ {movie1}, {movie2}, ... ] }
+        # TMDB wraps the movies with pagination info:
+        # { "page": 1, "results": [...], "total_pages": ..., "total_results": ... }
+        # We only need the list itself.
         return data["results"]
 
     else:
-        # If something went wrong, print the error and return an empty list
-        # This prevents the rest of the app from crashing
-        print(f"❌ Error searching for movies. Status code: {response.status_code}")
+        print(f"Error searching for movies. Status code: {response.status_code}")
         return []
 
 
 def get_movie_details(movie_id):
     """
-    Fetches full details about a specific movie using its TMDB ID.
+    Fetches the full details of one movie by its TMDB ID.
+
+    Returns more than search_movie() does: genres, runtime, overview, etc.
+    Not used anywhere in the app yet.
 
     Parameters:
-        movie_id (int): The unique TMDB ID for the movie
+        movie_id (int): The TMDB ID of the movie, e.g. 279 for Amadeus
 
     Returns:
-        dict: A dictionary with full movie details, or None if it failed
+        dict: All the movie's details, or None if the request failed.
     """
 
-    # The /movie/{movie_id} endpoint returns everything about a single movie
+    # The ID goes in the URL path, not in the params: /movie/279
     url = f"{BASE_URL}/movie/{movie_id}"
 
     params = {
@@ -76,8 +86,7 @@ def get_movie_details(movie_id):
     response = requests.get(url, params=params)
 
     if response.status_code == 200:
-        # Return the full dictionary of movie details
         return response.json()
     else:
-        print(f"❌ Error fetching movie details. Status code: {response.status_code}")
+        print(f"Error fetching movie details. Status code: {response.status_code}")
         return None
