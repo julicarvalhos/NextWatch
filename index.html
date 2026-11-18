@@ -16,15 +16,18 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
+    <!-- Makes the page scale properly on phones instead of showing a zoomed-out desktop view -->
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>NextWatch</title>
     <link rel="stylesheet" href="style.css" />
+    <!-- Playfair Display (serif, for titles) and Inter (sans-serif, for text) from Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,900;1,700&family=Inter:wght@400;500&display=swap" rel="stylesheet" />
   </head>
   <body>
 
     <div class="page">
 
+      <!-- Masthead styled like the cover of a film magazine -->
       <header>
         <div class="header-top">
           <h1 class="logo">NextWatch</h1>
@@ -40,6 +43,11 @@
 
       <main>
 
+        <!--
+          Recommendations. The dashed boxes are placeholders that keep
+          the layout visible until the recommendation engine (issue #7)
+          fills #recommendations-list with real posters.
+        -->
         <section id="recommendations-section">
           <p class="section-label">Recommended for you</p>
           <div class="poster-grid" id="recommendations-list">
@@ -50,6 +58,11 @@
           </div>
         </section>
 
+        <!--
+          Watch history. #history-list starts empty: issue #12 will
+          fill it with thumbnails loaded from GET /history.
+          The "+" button opens the modal below.
+        -->
         <section id="history-section">
           <p class="section-label">Your history</p>
           <div class="history-strip">
@@ -62,15 +75,26 @@
 
     </div>
 
+    <!--
+      Search modal. It sits outside .page so it can cover the whole screen.
+      Hidden by default; app.js adds the "open" class to show it.
+      The overlay is the dark background, the box is the panel on top of it.
+    -->
     <div class="modal-overlay" id="modal">
       <div class="modal-box">
         <button class="modal-close" id="modal-close">✕</button>
         <p class="modal-label">Add a film to your history</p>
         <input type="text" id="modal-input" placeholder="Search a film…" />
+        <!-- Filled by renderResults() in app.js with one <li> per film -->
         <ul class="modal-results" id="modal-results"></ul>
       </div>
     </div>
 
+    <!--
+      Loaded last, after all the elements above exist.
+      If it were in <head>, getElementById would run before
+      the page was built and find nothing.
+    -->
     <script src="app.js"></script>
   </body>
 </html>
