@@ -1,22 +1,35 @@
 # main.py
-# This is the main entry point of the application.
-# It connects to the TMDB API, allows the user to search for movies,
-# and saves/loads their watch history.
+#
+# Terminal version of NextWatch: the first prototype of the app.
+#
+# It was used to build and test the core logic (tmdb.py and history.py)
+# before the web interface existed. The real app is now the web version:
+# app.py (Flask server) + index.html / app.js (page).
+#
+# What it does when run (python main.py):
+#   1. checks that the TMDB API key works
+#   2. asks for a movie title and shows the top 5 results
+#   3. saves the FIRST result to the history (no choice, see handle_search)
+#   4. prints the whole history
+#
+# It writes to the same history.json as the web app.
 
 import requests
 from config import API_KEY
 from tmdb import search_movie
 from history import add_to_history, load_history
 
-# The base URL for every TMDB API request
+# Same address as in tmdb.py. Duplicated here only for connect_to_api().
 BASE_URL = "https://api.themoviedb.org/3"
 
 
 def connect_to_api():
     """
-    Tests the connection to the TMDB API.
-    We call this once at startup to make sure everything is working
-    before the user tries to do anything.
+    Checks that TMDB is reachable and the API key is valid.
+
+    Calls /configuration, a lightweight endpoint, just to see if the
+    request succeeds. A 401 status here almost always means a wrong key
+    in config.py.
     """
 
     url = f"{BASE_URL}/configuration"
@@ -24,33 +37,31 @@ def connect_to_api():
     response = requests.get(url, params=params)
 
     if response.status_code == 200:
-        print("✅ Connected to TMDB API successfully!")
+        print("Connected to TMDB API successfully!")
     else:
-        print(f"❌ Connection failed. Status code: {response.status_code}")
+        print(f"Connection failed. Status code: {response.status_code}")
 
 
 def display_search_results(movies):
     """
-    Prints the search results in a clean, numbered format.
+    Prints up to 5 movies as a numbered list.
 
     Parameters:
-        movies (list): The list of movie dictionaries returned by search_movie()
+        movies (list): Movies in TMDB's raw format, as returned by search_movie()
     """
 
     if not movies:
         print("No movies found.")
         return
 
-    print("\n🎬 Search Results:")
+    print("\nSearch Results:")
     print("-" * 40)
 
-    # Only show the first 5 results to keep the output clean
+    # enumerate(..., start=1) numbers the list from 1 instead of 0
     for i, movie in enumerate(movies[:5], start=1):
         title = movie.get("title", "Unknown Title")
-
-        # release_date looks like "2010-07-16" — [:4] grabs just the year
+        # "2010-07-16"[:4] -> "2010"
         year = movie.get("release_date", "N/A")[:4]
-
         rating = movie.get("vote_average", "N/A")
         movie_id = movie.get("id")
 
@@ -61,12 +72,12 @@ def display_search_results(movies):
 
 def display_history():
     """
-    Loads and prints the user's watch history from history.json.
+    Prints every movie in the watch history, or a message if it's empty.
     """
 
     history = load_history()
 
-    print("\n📋 Your watch history:")
+    print("\nYour watch history:")
     print("-" * 40)
 
     if not history:
@@ -80,28 +91,22 @@ def display_history():
 
 def handle_search():
     """
-    Asks the user for a movie title, searches TMDB,
-    displays the results, and saves the first result to history as a test.
+    Asks for a title, shows the results and saves the first one to the history.
 
-    NOTE: This is temporary — in Issue #5 we'll let the user
-    pick which result to add instead of always saving the first one.
+    Always saving the first result was a shortcut to test history.py.
+    Choosing among the results was planned for the terminal (issue #5),
+    but it was done in the web modal instead (issue #11).
     """
 
-    # Ask the user what to search for
-    query = input("\n🔍 Search for a movie: ")
-
-    # Call the search function from tmdb.py
+    query = input("\nSearch for a movie: ")
     results = search_movie(query)
-
-    # Show the results on screen
     display_search_results(results)
 
-    # Temporarily save the first result to test the history system
-    # This will be replaced with a proper selection menu in Issue #5
     if results:
         first = results[0]
 
-        # Only store the fields we actually need — not the entire TMDB response
+        # Keep only the fields the history uses, not TMDB's whole response.
+        # Unlike the web app, this doesn't save the poster.
         movie_to_save = {
             "id": first["id"],
             "title": first.get("title", "Unknown"),
@@ -112,14 +117,9 @@ def handle_search():
         add_to_history(movie_to_save)
 
 
-# This block only runs when we execute main.py directly
+# Only runs when the file is executed directly (python main.py),
+# not when another file imports it
 if __name__ == "__main__":
-
-    # Step 1: verify API connection at startup
     connect_to_api()
-
-    # Step 2: search for a movie and temporarily save the first result
     handle_search()
-
-    # Step 3: display the full watch history
     display_history()
