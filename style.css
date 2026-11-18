@@ -1,3 +1,36 @@
+/*
+  style.css
+
+  Visual style of NextWatch: a printed film magazine.
+  Cream "paper" background, dark ink text, thin rules between sections,
+  a bold serif (Playfair Display) for titles and a clean sans-serif
+  (Inter) for small uppercase labels.
+
+  Colour palette used throughout:
+    #F2E8D9  paper (background)
+    #1A1208  ink (main text, rules)
+    #9A8A75  muted brown (labels, secondary text)
+    #C4B49A  light brown (dashed borders, dividers)
+    #7A6A55  dark brown (thumbnail captions)
+
+  Sections:
+    1. Reset and page
+    2. Header
+    3. Sections and labels
+    4. Recommendation posters (issue #7)
+    5. History strip (issue #12)
+    6. Search modal (issue #11)
+*/
+
+
+/* ---------- 1. Reset and page ---------- */
+
+/*
+  Browsers add their own margins and padding to many elements.
+  Removing them gives the same starting point in every browser.
+  border-box makes width include padding and border, so a 160px
+  element stays 160px wide no matter how much padding it has.
+*/
 * {
   margin: 0;
   padding: 0;
@@ -8,20 +41,30 @@ body {
   background-color: #F2E8D9;
   font-family: 'Inter', sans-serif;
   color: #1A1208;
-  min-height: 100vh;
+  min-height: 100vh; /* at least the full height of the window */
 }
 
+/* Inner margin around all the content */
 .page {
   min-height: 100vh;
   padding: 1.75rem;
 }
 
+
+/* ---------- 2. Header ---------- */
+
+/* Thick rule on top, like the top of a magazine cover */
 header {
   border-top: 3px solid #1A1208;
   padding-top: 1.25rem;
   margin-bottom: 1.5rem;
 }
 
+/*
+  Logo on the left, meta lines on the right.
+  flex-end aligns both to the bottom, so the small text
+  sits on the same baseline as the big logo.
+*/
 .header-top {
   display: flex;
   align-items: flex-end;
@@ -35,9 +78,10 @@ header {
   font-weight: 900;
   color: #1A1208;
   line-height: 1;
-  letter-spacing: -1px;
+  letter-spacing: -1px; /* tighter letters look better at large sizes */
 }
 
+/* "Your cinema guide / Vol. 1 — 2026", stacked and right-aligned */
 .meta {
   display: flex;
   flex-direction: column;
@@ -46,6 +90,11 @@ header {
   padding-bottom: 4px;
 }
 
+/*
+  Tiny, widely spaced uppercase text: the "label" style.
+  The same combination is reused for .tagline, .section-label
+  and .modal-label to keep the magazine look consistent.
+*/
 .meta span {
   font-size: 9px;
   letter-spacing: 0.18em;
@@ -53,6 +102,7 @@ header {
   color: #9A8A75;
 }
 
+/* Thin double rule (top and bottom) framing the tagline */
 .header-bottom {
   border-top: 1px solid #1A1208;
   border-bottom: 1px solid #1A1208;
@@ -69,6 +119,10 @@ header {
   color: #9A8A75;
 }
 
+
+/* ---------- 3. Sections and labels ---------- */
+
+/* Recommendations and history stacked vertically, with space between */
 main {
   display: flex;
   flex-direction: column;
@@ -79,6 +133,7 @@ main {
   flex: 1;
 }
 
+/* "Recommended for you" / "Your history" */
 .section-label {
   font-size: 9px;
   letter-spacing: 0.2em;
@@ -87,11 +142,21 @@ main {
   margin-bottom: 0.75rem;
 }
 
+
+/* ---------- 4. Recommendation posters (issue #7) ---------- */
+
+/* Posters side by side in a row */
 .poster-grid {
   display: flex;
   gap: 12px;
 }
 
+/*
+  Empty dashed boxes shown until real recommendations exist.
+  aspect-ratio 2/3 is the shape of a movie poster, so the height
+  follows the width automatically. flex-shrink: 0 stops the
+  boxes from getting squeezed when the row runs out of space.
+*/
 .poster-placeholder {
   width: 160px;
   flex-shrink: 0;
@@ -100,19 +165,29 @@ main {
   background: transparent;
 }
 
+/*
+  A real poster. Not used yet: issue #7 will create these from JavaScript.
+  The image fills the card and the title sits on top of it, at the bottom.
+  position: relative makes it the reference for the absolutely
+  positioned image inside it.
+*/
 .poster {
   width: 160px;
   flex-shrink: 0;
   aspect-ratio: 2/3;
   display: flex;
   flex-direction: column;
-  justify-content: flex-end;
+  justify-content: flex-end; /* pushes the title to the bottom */
   padding: 8px;
   position: relative;
   overflow: hidden;
   cursor: pointer;
 }
 
+/*
+  The image covers the whole card (inset: 0 = top, right, bottom, left all 0).
+  object-fit: cover crops instead of stretching when proportions differ.
+*/
 .poster img {
   position: absolute;
   inset: 0;
@@ -121,10 +196,12 @@ main {
   object-fit: cover;
 }
 
+/* position: relative puts the text above the absolute image */
 .poster-info {
   position: relative;
 }
 
+/* Light text on a dark shadow so it stays readable on any poster */
 .poster-title {
   font-family: 'Playfair Display', serif;
   font-size: 13px;
@@ -141,6 +218,10 @@ main {
   margin-top: 2px;
 }
 
+
+/* ---------- 5. History strip (issue #12) ---------- */
+
+/* Row with the thumbnails followed by the "+" button */
 .history-strip {
   display: flex;
   align-items: flex-start;
@@ -152,6 +233,7 @@ main {
   gap: 8px;
 }
 
+/* A small poster thumbnail. Not used yet: issue #12 will create these. */
 .thumb {
   width: 56px;
   flex-shrink: 0;
@@ -161,9 +243,10 @@ main {
   width: 100%;
   aspect-ratio: 2/3;
   object-fit: cover;
-  display: block;
+  display: block; /* removes the small gap browsers leave under images */
 }
 
+/* Title under the thumbnail, cut with "…" when it doesn't fit in one line */
 .thumb-name {
   font-size: 9px;
   color: #7A6A55;
@@ -174,6 +257,7 @@ main {
   text-overflow: ellipsis;
 }
 
+/* The "+" button has the same size and shape as a thumbnail */
 .add-btn {
   width: 56px;
   aspect-ratio: 2/3;
@@ -194,19 +278,29 @@ main {
   color: #1A1208;
 }
 
+
+/* ---------- 6. Search modal (issue #11) ---------- */
+
+/*
+  Dark translucent layer covering the whole window.
+  Hidden (display: none) until app.js adds the "open" class.
+  position: fixed + inset: 0 keeps it over the screen even when scrolling.
+*/
 .modal-overlay {
   display: none;
   position: fixed;
   inset: 0;
-  background: rgba(26, 18, 8, 0.5);
+  background: rgba(26, 18, 8, 0.5); /* the ink colour at 50% opacity */
   align-items: center;
   justify-content: center;
 }
 
+/* Showing it as flex also centres the box (align-items/justify-content above) */
 .modal-overlay.open {
   display: flex;
 }
 
+/* The panel on top of the overlay; relative so the ✕ can be placed inside it */
 .modal-box {
   background: #F2E8D9;
   padding: 2rem;
@@ -214,6 +308,7 @@ main {
   position: relative;
 }
 
+/* ✕ pinned to the top-right corner of the box */
 .modal-close {
   position: absolute;
   top: 1rem;
@@ -233,6 +328,7 @@ main {
   margin-bottom: 1rem;
 }
 
+/* Search field drawn as a single underline, like writing on paper */
 #modal-input {
   width: 100%;
   background: transparent;
@@ -242,7 +338,7 @@ main {
   font-style: italic;
   font-size: 18px;
   color: #1A1208;
-  outline: none;
+  outline: none; /* removes the browser's blue focus ring */
   padding-bottom: 4px;
 }
 
@@ -250,8 +346,9 @@ main {
   color: #B0A090;
 }
 
+/* Search results, filled by renderResults() in app.js */
 .modal-results {
-  list-style: none;
+  list-style: none; /* no bullets */
   margin-top: 1rem;
 }
 
