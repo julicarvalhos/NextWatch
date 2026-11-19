@@ -11,6 +11,7 @@
 //   1. Opening and closing the "add a film" modal
 //   2. Searching as the user types (issue #11)
 //   3. Adding the clicked film to the history (issue #11)
+//   4. Showing and removing films in the history strip (issue #12)
 
 
 // ---------- 1. Modal open / close ----------
@@ -142,6 +143,8 @@ async function addToHistory(movie, li) {
       modal.classList.remove('open');
       modalInput.value = '';
       modalResults.innerHTML = '';
+      // Redraw the strip so the new film shows up right away
+      loadHistory();
     } else if (response.status === 409) {
       // Duplicate: keep the modal open and explain on the clicked line
       li.textContent = `${movie.title} - already in your history`;
@@ -153,3 +156,92 @@ async function addToHistory(movie, li) {
     li.textContent = 'Could not reach the server.';
   }
 }
+
+// ---------- 4. Watch history strip (issue #12) ----------
+
+// TMDB only sends the end of the image path ("/gQRf...jpg").
+// This is the start of it. w185 means 185px wide: enough for
+// small thumbnails, even on sharp screens.
+const IMAGE_URL = 'https://image.tmdb.org/t/p/w185';
+
+const historyList = document.getElementById('history-list');
+
+/**
+ * Fetches the watch history from the server and draws it.
+ * Runs when the page opens and again after a film is added.
+ */
+async function loadHistory() {
+  try {
+    const response = await fetch(`${API_URL}/history`);
+    const history = await response.json();
+    renderHistory(history);
+  } catch (error) {
+    historyList.textContent = 'Could not load your history.';
+  }
+}
+
+/**
+ * Replaces the history strip with one thumbnail per film.
+ *
+ * @param {Array} history - films from /history: { id, title, year, rating, poster }
+ */
+function renderHistory(history) {
+  historyList.innerHTML = '';
+
+  history.forEach((movie) => {
+    // <div class="thumb"> holds the image and the title (styles in style.css)
+    const thumb = document.createElement('div');
+    thumb.className = 'thumb';
+    // Full title on hover (long ones get cut with "…") and a hint of what clicking does
+    thumb.title = `${movie.title} (${movie.year || '—'}) — click to remove`;
+
+    if (movie.poster) {
+      const img = document.createElement('img');
+      img.src = IMAGE_URL + movie.poster;
+      // alt is read by screen readers and shown if the image fails to load
+      img.alt = movie.title;
+      thumb.appendChild(img);
+    } else {
+      // Older entries and some films have no poster: show an empty frame instead
+      const empty = document.createElement('div');
+      empty.className = 'thumb-empty';
+      thumb.appendChild(empty);
+    }
+
+    const name = document.createElement('p');
+    name.className = 'thumb-name';
+    name.textContent = movie.title;
+    thumb.appendChild(name);
+
+    thumb.addEventListener('click', () => removeFromHistory(movie));    
+    historyList.appendChild(thumb);
+  });
+}
+
+/**
+ * Asks for confirmation, removes the film on the server and redraws the strip.
+ *
+ * @param {Object} movie - the film whose thumbnail was clicked
+ */
+async function removeFromHistory(movie) {
+  // A single misclick would delete the film, so ask first.
+  // confirm() shows the browser's OK/Cancel box and returns true or false.
+  if (!confirm(`Remove "${movie.title}" from your history?`)) return;
+
+  try {
+    const response = await fetch(`${API_URL}/history/${movie.id}`, { method: 'DELETE' });
+
+    // response.ok is true for any 2xx status (here: 200)
+    if (!response.ok) {
+      alert('Could not remove this film. Try again.');
+    }
+  } catch (error) {
+    alert('Could not reach the server.');
+  }
+
+  // Redraw in every case, so the strip always matches history.json
+  loadHistory();
+}
+
+// Draw the history as soon as the page opens
+loadHistory();
