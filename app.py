@@ -12,13 +12,14 @@
 #   GET  /search?q=<title>   search TMDB, returns up to 5 movies
 #   GET  /history            the full watch history
 #   POST /history            add one movie to the history
+#   DELETE /history/<id>       remove one movie from the history
 #
 # Run with: python app.py   (then the API lives at http://127.0.0.1:5000)
 
 from flask import Flask, jsonify, request
 from flask_cors import CORS
 from tmdb import search_movie
-from history import load_history, add_to_history
+from history import load_history, add_to_history, remove_from_history
 
 app = Flask(__name__)
 
@@ -108,6 +109,28 @@ def post_history():
         return jsonify({"status": "duplicate"}), 409
 
     return jsonify({"status": "added"}), 201
+
+@app.route('/history/<int:movie_id>', methods=['DELETE'])
+def delete_history(movie_id):
+    """
+    Removes a movie from the watch history.
+
+    URL:
+        /history/<movie_id>, e.g. DELETE /history/279
+
+    Returns:
+        200 {"status": "removed"}    the movie was removed
+        404 {"status": "not found"}  the movie wasn't in the history
+    """
+
+    # <int:movie_id> makes Flask turn that piece of the URL into an int,
+    # so it matches the ids saved in history.json (which are numbers)
+    removed = remove_from_history(movie_id)
+
+    if not removed:
+        return jsonify({"status": "not found"}), 404
+
+    return jsonify({"status": "removed"}), 200
 
 # Only runs when the file is executed directly (python app.py),
 # not when another file imports it.

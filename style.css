@@ -233,10 +233,12 @@ main {
   gap: 8px;
 }
 
-/* A small poster thumbnail. Not used yet: issue #12 will create these. */
+/* A small poster thumbnail, created by renderHistory() in app.js.
+   Clicking it removes the film from the history. */
 .thumb {
   width: 56px;
   flex-shrink: 0;
+  cursor: pointer;
 }
 
 .thumb img {
@@ -244,6 +246,14 @@ main {
   aspect-ratio: 2/3;
   object-fit: cover;
   display: block; /* removes the small gap browsers leave under images */
+}
+
+/* Stand-in for films saved without a poster (older entries,
+   or films TMDB has no image for). Same size as a thumbnail image. */
+.thumb-empty {
+  width: 100%;
+  aspect-ratio: 2/3;
+  border: 1px dashed #C4B49A;
 }
 
 /* Title under the thumbnail, cut with "…" when it doesn't fit in one line */

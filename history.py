@@ -90,7 +90,7 @@ def remove_from_history(movie_id):
     """
     Removes a movie from the history by its TMDB id.
 
-    Not used by the web app yet: issue #12 will add a route for it.
+    Used by DELETE /history/<id> in app.py.
 
     Parameters:
         movie_id (int): The TMDB id of the movie to remove
