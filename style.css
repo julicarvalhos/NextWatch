@@ -256,6 +256,12 @@ main {
   border: 1px dashed #C4B49A;
 }
 
+/* Fades the image on hover to hint that clicking does something */
+.thumb:hover img,
+.thumb:hover .thumb-empty {
+  opacity: 0.5;
+}
+
 /* Title under the thumbnail, cut with "…" when it doesn't fit in one line */
 .thumb-name {
   font-size: 9px;
