@@ -14,10 +14,13 @@
 import json
 import os
 
-# NOTE: this path is relative to the folder the app is *run from*,
-# not to this file. Running "python app.py" from another folder
-# would create a separate, empty history.json there.
-HISTORY_FILE = "history.json"
+# Full path to history.json, built from where this file lives, so the
+# app always uses the same history no matter which folder it is run from.
+#   __file__           this file's path, e.g. "history.py"
+#   os.path.abspath    makes it absolute: "/home/juliana/projetos/NextWatch/history.py"
+#   os.path.dirname    keeps only the folder: "/home/juliana/projetos/NextWatch"
+#   os.path.join       adds the file name with the right separator for the OS
+HISTORY_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "history.json")
 
 
 def load_history():

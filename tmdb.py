@@ -15,6 +15,11 @@ from config import API_KEY
 # Every TMDB endpoint starts with this address
 BASE_URL = "https://api.themoviedb.org/3"
 
+# Maximum number of seconds to wait for TMDB to answer.
+# Without a limit, a slow or unreachable TMDB would make the request
+# wait forever, freezing the Flask server along with it.
+REQUEST_TIMEOUT = 10
+
 
 def search_movie(title):
     """
@@ -29,8 +34,8 @@ def search_movie(title):
         list: Movie dictionaries in TMDB's raw format, best matches first.
               Each one has keys like "id", "title", "release_date",
               "vote_average" and "poster_path".
-              Returns an empty list if the request fails, so callers
-              can always loop over the result without checking for errors.
+              Returns an empty list if TMDB can't be reached or answers
+              with an error, so callers can always loop over the result.
     """
 
     url = f"{BASE_URL}/search/movie"
@@ -44,7 +49,14 @@ def search_movie(title):
         "language": "en-US"
     }
 
-    response = requests.get(url, params=params)
+    try:
+        response = requests.get(url, params=params, timeout=REQUEST_TIMEOUT)
+    except requests.RequestException as error:
+        # Raised when there is no answer at all: timeout, no internet,
+        # DNS failure... RequestException is the parent of all those errors,
+        # so a single except covers every case.
+        print(f"Could not reach TMDB: {error}")
+        return []
 
     # 200 means success. Anything else (401 = bad API key,
     # 429 = too many requests, 5xx = TMDB is down) is treated as a failure.
@@ -72,7 +84,8 @@ def get_movie_details(movie_id):
         movie_id (int): The TMDB ID of the movie, e.g. 279 for Amadeus
 
     Returns:
-        dict: All the movie's details, or None if the request failed.
+        dict: All the movie's details, or None if TMDB can't be reached
+              or the request failed.
     """
 
     # The ID goes in the URL path, not in the params: /movie/279
@@ -83,7 +96,11 @@ def get_movie_details(movie_id):
         "language": "en-US"
     }
 
-    response = requests.get(url, params=params)
+    try:
+        response = requests.get(url, params=params, timeout=REQUEST_TIMEOUT)
+    except requests.RequestException as error:
+        print(f"Could not reach TMDB: {error}")
+        return None
 
     if response.status_code == 200:
         return response.json()
