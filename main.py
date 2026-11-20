@@ -16,7 +16,7 @@
 
 import requests
 from config import API_KEY
-from tmdb import search_movie
+from tmdb import search_movie, REQUEST_TIMEOUT
 from history import add_to_history, load_history
 
 # Same address as in tmdb.py. Duplicated here only for connect_to_api().
@@ -34,8 +34,11 @@ def connect_to_api():
 
     url = f"{BASE_URL}/configuration"
     params = {"api_key": API_KEY}
-    response = requests.get(url, params=params)
-
+    try:
+        response = requests.get(url, params=params, timeout=REQUEST_TIMEOUT)
+    except requests.RequestException as error:
+        print(f"Could not reach TMDB: {error}")
+        return
     if response.status_code == 200:
         print("Connected to TMDB API successfully!")
     else:
