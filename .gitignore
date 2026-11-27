@@ -1,4 +1,13 @@
+# Secrets: holds the TMDB API key (see config.example.py)
 config.py
+
+# Personal data created by the app
+history.json
+
+# Python cache
 __pycache__/
 *.pyc
-history.json
+
+# Virtual environment
+.venv/
+venv/
